@@ -36,16 +36,32 @@ jobs:
           fi
           set -e
 
-      - name: ?? Ejecutar analisis SAST con SonarCloud
+      - name: Instalar SonarScanner para SAST
+        run: |
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+          export PATH=$PATH:$(pwd)/sonar-scanner-4.8.0.2856-linux/bin
+          sonar-scanner --version
+
+      - name: Ejecutar análisis SAST con SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.TOKEN_SONAR }}
         run: |
-          echo "Ejecutando análisis SAST con SonarCloud."
           sonar-scanner -Dsonar.organization=curso-secops \
             -Dsonar.projectKey=${{ github.event.repository.name }} \
             -Dsonar.sources=. \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN
+      # - name: Ejecutar Analisis SAST
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.TOKEN_SONAR }}
+      #   run: |
+      #     echo "Ejecutando análisis SAST con SonarCloud."
+      #     sonar-scanner -Dsonar.organization=curso-secops \
+      #       -Dsonar.projectKey=${{ github.event.repository.name }} \
+      #       -Dsonar.sources=. \
+      #       -Dsonar.host.url=https://sonarcloud.io \
+      #       -Dsonar.login=$SONAR_TOKEN
 
       - name: Validando Resultados SAST
         run: |
