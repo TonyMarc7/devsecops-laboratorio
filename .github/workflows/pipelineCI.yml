@@ -64,12 +64,12 @@ jobs:
           sudo apt-get install -y unzip wget
           wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.2/dependency-check-10.0.2-release.zip
           unzip dependency-check-10.0.2-release.zip -d dependency-check
-          chmod +x dependency-check/bin/dependency-check.sh
+          chmod +x dependency-check/dependency-check/bin/dependency-check.sh
 
       - name: Ejecutar analisis SCA
         run: |
           mkdir -p reports
-          dependency-check/bin/dependency-check.sh --scan . --format JSON --out reports/
+          dependency-check/dependency-check/bin/dependency-check.sh --scan . --format JSON --out reports/
           cat reports/dependency-check-report.json | jq '.dependencies | length'
 
       - name: Validar vulnerabilidades SCA
