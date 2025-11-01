@@ -36,16 +36,7 @@ jobs:
           fi
           set -e
 
-      - name: Ejecutar Analisis SAST
-        uses: SonarSource/sonarcloud-github-action@v2.2.1
-        with:
-          organization: curso-secops
-          projectKey: ${{ github.event.repository.name }}
-          projectName: ${{ github.event.repository.name }}
-        env:
-          SONAR_TOKEN: ${{ secrets.TOKEN_SONAR }}
-
-      - name: Validando Resultados SAST
+      - name: Validando Resultados Sonar
         run: |
           issueValidate=$(curl -s -X GET -u '${{ secrets.TOKEN_SONAR }}:' \
             'https://sonarcloud.io/api/issues/search?branch=main&componentKeys=${{ github.event.repository.name }}-curso-secops&facets=severities' \
