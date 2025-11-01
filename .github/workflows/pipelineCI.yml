@@ -15,32 +15,20 @@ jobs:
       #   run: |
       #     echo "TEST PRUEBA"
 
-      - name: Validar y Crear Proyecto en SonarCloud
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          ORG_KEY: curso-secops
-          PROJECT_KEY: testing123
+      - name: Validar Creación de Proyecto en SonarCloud
+        id: validateProjectOnSonar
         run: |
-          echo "Verificando si el proyecto existe..."
-          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/projects/search?organization=$ORG_KEY&q=$PROJECT_KEY")
-          EXISTS=$(echo "$RESPONSE" | grep -c "\"key\":\"$PROJECT_KEY\"")
+          #pwd
+          #ls -R
+          set +e
+          curl -f -X POST -u '${{ secrets.TOKEN_SONAR }}:' 'https://sonarcloud.io/api/projects/create' -d 'name=${{ github.event.repository.name }}' -d 'project=${{ github.event.repository.name }}' -d 'organization=curso-secops' -d 'visibility=public'
 
-          if [ "$EXISTS" -eq 1 ]; then
-            echo "El proyecto '$PROJECT_KEY' ya existe."
+          if [ $? -ne 0 ]; then
+            echo "Proyecto ya creado en Sonar."
           else
-            echo "Creando proyecto '$PROJECT_KEY' en SonarCloud..."
-            CREATE=$(curl -s -w "%{http_code}" -o /tmp/out.json -X POST -u "$SONAR_TOKEN:" \
-              "https://sonarcloud.io/api/projects/create" \
-              -d "name=$PROJECT_KEY" \
-              -d "organization=$ORG_KEY" \
-              -d "project=$PROJECT_KEY" \
-              -d "visibility=public")
-            
-            if [ "$CREATE" -eq 200 ]; then
-              echo "Proyecto '$PROJECT_KEY' creado exitosamente."
-            else
-              echo "Error al crear el proyecto. Código HTTP: $CREATE"
-              cat /tmp/out.json
-              exit 1
-            fi
+            echo "Proyecto creado exitosamente en Sonar."
+
+            echo "Se establece rama main por defecto."
+            curl -X POST -u '${{ secrets.TOKEN_SONAR }}:' 'https://sonarcloud.io/api/project_branches/rename' -d 'name=main' -d 'project=${{ github.event.repository.name }}'
           fi
+          set -e
