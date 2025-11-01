@@ -32,3 +32,14 @@ jobs:
             curl -X POST -u '${{ secrets.TOKEN_SONAR }}:' 'https://sonarcloud.io/api/project_branches/rename' -d 'name=main' -d 'project=${{ github.event.repository.name }}'
           fi
           set -e
+
+      - name: Validando resultados con Sonar
+        run: |
+          issueValidate=$(curl -s -X GET -u '${{ secrets.TOKEN_SONAR }}:' 'https://sonarcloud.io/api/issues/search?branch=main&componentKeys=${{ github.event.repository.name }}-curso-secops&facets=severities' | jq '.facets[0].values[1].count')
+          echo "Cantidad de issues bloqueantes: $issueValidate"
+          if [ "$issueValidate" -gt 0 ]; then
+            echo "Se encontraron issues bloqueantes."
+            #exit 1
+          else
+            echo "No se encontraron issues bloqueantes."
+          fi
