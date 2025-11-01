@@ -11,7 +11,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: 1RA PRUEBA
+      # - name: 1RA PRUEBA
+      #   run: |
+      #     echo "TEST PRUEBA"
+
+      - name: Validar y Crear Proyecto en SonarCloud
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          ORG_KEY: curso-secops
+          PROJECT_KEY: testing123
         run: |
-          echo "TEST PRUEBA"
-          echo "Curso DevSecOps"
+          echo "Verificando si el proyecto existe..."
+          RESPONSE=$(curl -s -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/projects/search?organization=$ORG_KEY&q=$PROJECT_KEY")
+          EXISTS=$(echo "$RESPONSE" | grep -c "\"key\":\"$PROJECT_KEY\"")
+
+          if [ "$EXISTS" -eq 1 ]; then
+            echo "El proyecto '$PROJECT_KEY' ya existe."
+          else
+            echo "Creando proyecto '$PROJECT_KEY' en SonarCloud..."
+            CREATE=$(curl -s -w "%{http_code}" -o /tmp/out.json -X POST -u "$SONAR_TOKEN:" \
+              "https://sonarcloud.io/api/projects/create" \
+              -d "name=$PROJECT_KEY" \
+              -d "organization=$ORG_KEY" \
+              -d "project=$PROJECT_KEY" \
+              -d "visibility=public")
+            
+            if [ "$CREATE" -eq 200 ]; then
+              echo "Proyecto '$PROJECT_KEY' creado exitosamente."
+            else
+              echo "Error al crear el proyecto. Código HTTP: $CREATE"
+              cat /tmp/out.json
+              exit 1
+            fi
+          fi
